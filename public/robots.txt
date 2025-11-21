@@ -1,0 +1,15 @@
+# Robots.txt for MobileSecurity.kz
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+
+# Sitemap location
+Sitemap: https://mobilesecurity.kz/sitemap.xml
+
+# Crawl-delay for specific bots
+User-agent: Yandex
+Crawl-delay: 1
+
+User-agent: Googlebot
+Crawl-delay: 0
