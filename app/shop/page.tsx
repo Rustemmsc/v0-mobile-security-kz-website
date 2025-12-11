@@ -21,6 +21,7 @@ export default async function ShopPage() {
     .from("products")
     .select("*, product_categories(name_ru, name_kk, name_en, id)")
     .eq("is_active", true)
+    .order("position", { ascending: true, nullsFirst: false })
     .order("id", { ascending: true })
 
   return (

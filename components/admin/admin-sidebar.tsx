@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { LayoutDashboard, Package, FolderTree, FileText, ShoppingCart, Settings, Shield } from "lucide-react"
+import { LayoutDashboard, Package, FolderTree, FileText, ShoppingCart, Settings, Shield, ArrowUpDown } from "lucide-react"
 
 interface AdminSidebarProps {
   adminUser: {
@@ -22,6 +22,11 @@ const navigation = [
     name: "Товары",
     href: "/admin/products",
     icon: Package,
+  },
+  {
+    name: "Сортировка товаров",
+    href: "/admin/products/sort",
+    icon: ArrowUpDown,
   },
   {
     name: "Категории",
