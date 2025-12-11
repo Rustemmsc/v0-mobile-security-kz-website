@@ -83,25 +83,67 @@ export function ProductForm({ categories, product }: ProductFormProps) {
     const supabase = createClient()
 
     try {
+      // Подготовка данных: убираем undefined и преобразуем типы
+      const dataToSave: any = {
+        name_ru: formData.name_ru,
+        name_kk: formData.name_kk,
+        name_en: formData.name_en,
+        description_ru: formData.description_ru || null,
+        description_kk: formData.description_kk || null,
+        description_en: formData.description_en || null,
+        price: Number(formData.price),
+        currency: formData.currency,
+        sku: formData.sku || null,
+        stock_quantity: Number(formData.stock_quantity),
+        category_id: formData.category_id || null,
+        images: formData.images || [],
+        brand: formData.brand || null,
+        model: formData.model || null,
+        is_in_stock: Boolean(formData.is_in_stock),
+        is_active: Boolean(formData.is_active),
+      }
+
+      // Добавляем новые поля только если они определены
+      if (formData.price_type) {
+        dataToSave.price_type = formData.price_type
+      }
+      if (formData.is_retail !== undefined) {
+        dataToSave.is_retail = Boolean(formData.is_retail)
+      }
+      if (formData.is_on_order !== undefined) {
+        dataToSave.is_on_order = Boolean(formData.is_on_order)
+      }
+      if (formData.is_on_sale !== undefined) {
+        dataToSave.is_on_sale = Boolean(formData.is_on_sale)
+      }
+
       if (product?.id) {
         // Update existing product
-        const { error } = await supabase.from("products").update(formData).eq("id", product.id)
+        const { error, data } = await supabase.from("products").update(dataToSave).eq("id", product.id).select()
 
-        if (error) throw error
+        if (error) {
+          console.error("Supabase error:", error)
+          toast.error(`Ошибка при сохранении товара: ${error.message}`)
+          return
+        }
         toast.success("Товар успешно обновлен")
       } else {
         // Create new product
-        const { error } = await supabase.from("products").insert([formData])
+        const { error, data } = await supabase.from("products").insert([dataToSave]).select()
 
-        if (error) throw error
+        if (error) {
+          console.error("Supabase error:", error)
+          toast.error(`Ошибка при сохранении товара: ${error.message}`)
+          return
+        }
         toast.success("Товар успешно создан")
       }
 
       router.push("/admin/products")
       router.refresh()
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving product:", error)
-      toast.error("Ошибка при сохранении товара")
+      toast.error(`Ошибка при сохранении товара: ${error?.message || "Неизвестная ошибка"}`)
     } finally {
       setIsLoading(false)
     }
