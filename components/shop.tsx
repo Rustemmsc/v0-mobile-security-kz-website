@@ -179,7 +179,7 @@ export function Shop({ categories: dbCategories, products: dbProducts, showCusto
     popular: p.is_featured,
     inStock: p.is_in_stock,
     sku: p.sku || "",
-    isOnSale: p.is_on_sale || false,
+    isOnSale: p.is_on_sale === true,
     isOnOrder: p.is_on_order || false,
     isRetail: p.is_retail ?? true,
     priceType: p.price_type || "retail",
