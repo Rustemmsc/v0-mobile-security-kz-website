@@ -174,8 +174,6 @@ export function Shop({ categories: dbCategories, products: dbProducts, showCusto
     image: p.images && p.images.length > 0 ? p.images[0] : "/placeholder.svg?height=400&width=400",
     popular: p.is_featured,
     inStock: p.is_in_stock,
-    rating: 0,
-    reviewCount: 0,
     sku: p.sku || "",
     name_ru: p.name_ru,
     name_kk: p.name_kk,

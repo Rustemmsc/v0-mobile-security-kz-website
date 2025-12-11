@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from 'next/navigation'
-import { ShoppingCart, Plus, Star } from 'lucide-react'
+import { ShoppingCart, Plus } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -23,8 +23,6 @@ interface ProductCardProps {
     brand?: string
     sku?: string
     inStock?: boolean
-    rating?: number
-    reviewCount?: number
   }
 }
 
@@ -99,17 +97,6 @@ export function ProductCard({ product }: ProductCardProps) {
             </Badge>
           )}
         </div>
-
-        {/* Rating */}
-        {typeof product.rating === "number" && product.rating > 0 && (
-          <div className="absolute bottom-4 left-4 flex items-center gap-1 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full">
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            <span className="text-sm font-semibold">{product.rating}</span>
-            {typeof product.reviewCount === "number" && product.reviewCount > 0 && (
-              <span className="text-xs text-muted-foreground">({product.reviewCount})</span>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Product Info */}

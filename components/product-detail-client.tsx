@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, ShoppingCart, Plus, Star, ZoomIn, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeft, ShoppingCart, Plus, ZoomIn, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -247,19 +247,12 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             {/* Product Name */}
             <h1 className="text-4xl font-bold text-balance">{getProductName()}</h1>
 
-            {/* Rating & SKU */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1">
-                <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                <Star className="w-5 h-5 fill-muted text-muted" />
-              </div>
-              {product.sku && (
+            {/* SKU */}
+            {product.sku && (
+              <div className="flex items-center gap-4">
                 <span className="text-sm text-muted-foreground">Артикул: {product.sku}</span>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Description */}
             <p className="text-lg text-muted-foreground text-pretty">
