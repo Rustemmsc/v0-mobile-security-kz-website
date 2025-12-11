@@ -103,66 +103,44 @@ export function ProductForm({ categories, product }: ProductFormProps) {
         is_active: Boolean(formData.is_active),
       }
 
-      // Пробуем добавить новые поля, но если их нет в БД - отправляем без них
-      // Сначала пробуем с новыми полями
-      const dataWithNewFields = { ...dataToSave }
+      // Добавляем новые поля в данные для сохранения
       if (formData.price_type) {
-        dataWithNewFields.price_type = formData.price_type
+        dataToSave.price_type = formData.price_type
       }
       if (formData.is_retail !== undefined) {
-        dataWithNewFields.is_retail = Boolean(formData.is_retail)
+        dataToSave.is_retail = Boolean(formData.is_retail)
       }
       if (formData.is_on_order !== undefined) {
-        dataWithNewFields.is_on_order = Boolean(formData.is_on_order)
+        dataToSave.is_on_order = Boolean(formData.is_on_order)
       }
       if (formData.is_on_sale !== undefined) {
-        dataWithNewFields.is_on_sale = Boolean(formData.is_on_sale)
+        dataToSave.is_on_sale = Boolean(formData.is_on_sale)
       }
 
       if (product?.id) {
-        // Update existing product - сначала пробуем с новыми полями
-        let { error, data } = await supabase.from("products").update(dataWithNewFields).eq("id", product.id).select()
+        // Update existing product
+        const { error, data } = await supabase.from("products").update(dataToSave).eq("id", product.id).select()
 
-        // Если ошибка связана с отсутствием колонок, пробуем без них
-        if (error && (error.message.includes("column") || error.message.includes("schema cache"))) {
-          console.warn("New fields not found in DB, saving without them:", error.message)
-          const { error: errorWithoutFields } = await supabase.from("products").update(dataToSave).eq("id", product.id).select()
-          if (errorWithoutFields) {
-            console.error("Supabase error:", errorWithoutFields)
-            toast.error(`Ошибка при сохранении товара: ${errorWithoutFields.message}`)
-            return
-          }
-          toast.success("Товар успешно обновлен (новые поля не сохранены - выполните SQL скрипт)")
-        } else if (error) {
+        if (error) {
           console.error("Supabase error:", error)
           toast.error(`Ошибка при сохранении товара: ${error.message}`)
           return
-        } else {
-          toast.success("Товар успешно обновлен")
-          // Обновляем данные товара после успешного сохранения
-          router.refresh()
         }
+        
+        toast.success("Товар успешно обновлен")
+        // Обновляем данные товара после успешного сохранения
+        router.refresh()
       } else {
-        // Create new product - сначала пробуем с новыми полями
-        let { error, data } = await supabase.from("products").insert([dataWithNewFields]).select()
+        // Create new product
+        const { error, data } = await supabase.from("products").insert([dataToSave]).select()
 
-        // Если ошибка связана с отсутствием колонок, пробуем без них
-        if (error && (error.message.includes("column") || error.message.includes("schema cache"))) {
-          console.warn("New fields not found in DB, saving without them:", error.message)
-          const { error: errorWithoutFields } = await supabase.from("products").insert([dataToSave]).select()
-          if (errorWithoutFields) {
-            console.error("Supabase error:", errorWithoutFields)
-            toast.error(`Ошибка при сохранении товара: ${errorWithoutFields.message}`)
-            return
-          }
-          toast.success("Товар успешно создан (новые поля не сохранены - выполните SQL скрипт)")
-        } else if (error) {
+        if (error) {
           console.error("Supabase error:", error)
           toast.error(`Ошибка при сохранении товара: ${error.message}`)
           return
-        } else {
-          toast.success("Товар успешно создан")
         }
+        
+        toast.success("Товар успешно создан")
       }
 
       // Обновляем данные перед переходом
