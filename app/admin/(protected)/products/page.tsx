@@ -11,7 +11,7 @@ export default async function ProductsPage() {
   const { data: products } = await supabase
     .from("products")
     .select("*, product_categories(name_ru)")
-    .order("created_at", { ascending: false })
+    .order("price", { ascending: true })
 
   return (
     <div className="space-y-6">
