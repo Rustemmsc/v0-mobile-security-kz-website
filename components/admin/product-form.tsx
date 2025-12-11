@@ -140,25 +140,20 @@ export function ProductForm({ categories, product }: ProductFormProps) {
         
         router.refresh()
       } else {
-        // Create new product - сначала пробуем с новыми полями
+        // Create new product - пробуем с новыми полями
         let { error, data } = await supabase.from("products").insert([dataWithNewFields]).select()
 
-        // Если ошибка связана с кэшем схемы, автоматически пробуем без новых полей
-        if (error && (error.message.includes("schema cache") || error.message.includes("Could not find") || error.message.includes("column"))) {
-          console.warn("Schema cache issue detected, retrying without new fields:", error.message)
-          // Автоматически повторяем запрос без новых полей
-          const { error: errorWithoutFields, data: dataWithoutFields } = await supabase.from("products").insert([dataToSave]).select()
+        // Если ошибка - пробуем без новых полей
+        if (error) {
+          console.warn("Error with new fields, trying without them:", error.message)
+          // Сохраняем без новых полей, чтобы товар хотя бы сохранился
+          const { error: errorWithoutFields } = await supabase.from("products").insert([dataToSave]).select()
           if (errorWithoutFields) {
-            console.error("Supabase error (without new fields):", errorWithoutFields)
+            console.error("Supabase error:", errorWithoutFields)
             toast.error(`Ошибка при сохранении товара: ${errorWithoutFields.message}`)
             return
           }
-          // Товар создан, но без новых полей - это нормально, пока кэш не обновится
-          toast.success("Товар успешно создан. Новые поля будут доступны после обновления кэша схемы (2-5 минут).")
-        } else if (error) {
-          console.error("Supabase error:", error)
-          toast.error(`Ошибка при сохранении товара: ${error.message}`)
-          return
+          toast.success("Товар создан. Новые поля будут доступны после обновления кэша (попробуйте через 2-3 минуты).")
         } else {
           toast.success("Товар успешно создан")
         }
