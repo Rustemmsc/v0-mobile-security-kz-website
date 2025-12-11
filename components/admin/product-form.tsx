@@ -119,31 +119,32 @@ export function ProductForm({ categories, product }: ProductFormProps) {
       }
 
       if (product?.id) {
-        // Update existing product - сначала пробуем с новыми полями
-        let { error, data } = await supabase.from("products").update(dataWithNewFields).eq("id", product.id).select()
+        // Update existing product - используем API route с service role для обхода кэша схемы
+        try {
+          const response = await fetch("/api/admin/products/update", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              productId: product.id,
+              productData: dataWithNewFields,
+            }),
+          })
 
-        // Если ошибка связана с кэшем схемы, автоматически пробуем без новых полей
-        if (error && (error.message.includes("schema cache") || error.message.includes("Could not find") || error.message.includes("column"))) {
-          console.warn("Schema cache issue detected, retrying without new fields:", error.message)
-          // Автоматически повторяем запрос без новых полей
-          const { error: errorWithoutFields, data: dataWithoutFields } = await supabase.from("products").update(dataToSave).eq("id", product.id).select()
-          if (errorWithoutFields) {
-            console.error("Supabase error (without new fields):", errorWithoutFields)
-            toast.error(`Ошибка при сохранении товара: ${errorWithoutFields.message}`)
-            return
+          const result = await response.json()
+
+          if (!response.ok) {
+            throw new Error(result.error || "Ошибка при сохранении товара")
           }
-          // Товар сохранен, но без новых полей - это нормально, пока кэш не обновится
-          toast.success("Товар успешно обновлен. Новые поля будут доступны после обновления кэша схемы (2-5 минут).")
-        } else if (error) {
-          console.error("Supabase error:", error)
+
+          toast.success("Товар успешно обновлен")
+          router.refresh()
+        } catch (error: any) {
+          console.error("Error updating product:", error)
           toast.error(`Ошибка при сохранении товара: ${error.message}`)
           return
-        } else {
-          toast.success("Товар успешно обновлен")
         }
-        
-        // Обновляем данные товара после успешного сохранения
-        router.refresh()
       } else {
         // Create new product - сначала пробуем с новыми полями
         let { error, data } = await supabase.from("products").insert([dataWithNewFields]).select()
