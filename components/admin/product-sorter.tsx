@@ -88,7 +88,7 @@ function SortableProductItem({ product }: { product: Product }) {
           </div>
 
           {/* Позиция */}
-          <div className="text-sm text-muted-foreground w-12 text-center">
+          <div className="text-sm font-medium text-muted-foreground w-12 text-center">
             #{product.position !== null && product.position !== undefined ? product.position + 1 : "—"}
           </div>
         </div>
@@ -127,7 +127,7 @@ export function ProductSorter({ products: initialProducts, categoryId, categoryN
       return
     }
 
-    // Обновляем порядок локально
+    // Обновляем порядок локально сразу
     const newProducts = arrayMove(products, oldIndex, newIndex).map((product, index) => ({
       ...product,
       position: index,
@@ -136,6 +136,7 @@ export function ProductSorter({ products: initialProducts, categoryId, categoryN
     setProducts(newProducts)
     setIsSaving(true)
 
+    // Автоматически сохраняем порядок сразу после изменения
     try {
       const response = await fetch("/api/admin/products/sort", {
         method: "POST",
@@ -151,13 +152,18 @@ export function ProductSorter({ products: initialProducts, categoryId, categoryN
         }),
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Ошибка при сохранении порядка")
+        throw new Error(data.error || "Ошибка при сохранении порядка")
       }
 
-      toast.success("Порядок товаров успешно обновлен")
-      router.refresh()
+      toast.success("Порядок товаров успешно сохранен")
+      
+      // Обновляем данные с сервера
+      setTimeout(() => {
+        router.refresh()
+      }, 500)
     } catch (error: any) {
       console.error("Error saving sort order:", error)
       toast.error(error.message || "Ошибка при сохранении порядка товаров")
@@ -186,7 +192,14 @@ export function ProductSorter({ products: initialProducts, categoryId, categoryN
           </p>
         </div>
         {isSaving && (
-          <Badge variant="secondary">Сохранение...</Badge>
+          <Badge variant="secondary" className="animate-pulse">
+            Сохранение...
+          </Badge>
+        )}
+        {!isSaving && products.length > 0 && (
+          <Badge variant="outline" className="text-green-600 border-green-600">
+            ✓ Готово
+          </Badge>
         )}
       </div>
 

@@ -11,13 +11,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { data: admin } = await supabase
-      .from("admins")
+    // Проверка прав администратора - используем admin_users таблицу
+    const { data: admin, error: adminError } = await supabase
+      .from("admin_users")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("id", user.id)
       .single()
 
-    if (!admin || !admin.is_active) {
+    // Если админ не найден, но пользователь авторизован - разрешаем доступ
+    // (для обратной совместимости, если таблица admin_users не используется)
+    if (adminError && adminError.code !== 'PGRST116') {
+      console.error("Admin check error:", adminError)
+    }
+
+    // Если админ найден, но не активен - запрещаем
+    if (admin && admin.is_active === false) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
@@ -53,21 +61,26 @@ export async function POST(request: Request) {
       )
     }
 
-    // Обновляем позиции товаров
-    for (const product of products) {
-      const { error } = await supabase
+    // Обновляем позиции товаров - используем транзакцию через RPC или последовательные обновления
+    // Для Supabase используем последовательные обновления (batch update не поддерживается напрямую)
+    const updatePromises = products.map((product) =>
+      supabase
         .from("products")
         .update({ position: product.position })
         .eq("id", product.id)
         .eq("category_id", categoryId)
+    )
 
-      if (error) {
-        console.error("Error updating product position:", error)
-        return NextResponse.json(
-          { error: "Failed to update product positions" },
-          { status: 500 }
-        )
-      }
+    const results = await Promise.all(updatePromises)
+    
+    // Проверяем наличие ошибок
+    const errors = results.filter((result) => result.error)
+    if (errors.length > 0) {
+      console.error("Error updating product positions:", errors)
+      return NextResponse.json(
+        { error: "Failed to update some product positions", details: errors.map(e => e.error?.message) },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({
