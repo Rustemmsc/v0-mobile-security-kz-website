@@ -23,6 +23,10 @@ interface ProductCardProps {
     brand?: string
     sku?: string
     inStock?: boolean
+    isOnSale?: boolean
+    isOnOrder?: boolean
+    isRetail?: boolean
+    priceType?: string
   }
 }
 
@@ -90,6 +94,11 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Badges */}
         <div className="absolute top-4 right-4 flex flex-col gap-2">
+          {product.isOnSale && (
+            <Badge className="bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/50 font-semibold">
+              Акция
+            </Badge>
+          )}
           {product.popular && <Badge className="bg-primary shadow-lg shadow-primary/50">{t("shop.popular")}</Badge>}
           {product.inStock === false && (
             <Badge variant="destructive" className="shadow-lg">

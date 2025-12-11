@@ -40,6 +40,10 @@ interface Product {
   is_in_stock: boolean
   sku: string | null
   is_active: boolean
+  is_on_sale?: boolean | null
+  is_on_order?: boolean | null
+  is_retail?: boolean | null
+  price_type?: string | null
   product_categories?: {
     name_ru: string
     name_kk: string
@@ -175,6 +179,10 @@ export function Shop({ categories: dbCategories, products: dbProducts, showCusto
     popular: p.is_featured,
     inStock: p.is_in_stock,
     sku: p.sku || "",
+    isOnSale: p.is_on_sale || false,
+    isOnOrder: p.is_on_order || false,
+    isRetail: p.is_retail ?? true,
+    priceType: p.price_type || "retail",
     name_ru: p.name_ru,
     name_kk: p.name_kk,
     name_en: p.name_en,

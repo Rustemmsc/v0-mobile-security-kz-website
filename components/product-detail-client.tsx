@@ -27,6 +27,10 @@ interface Product {
   is_in_stock: boolean
   sku: string | null
   is_active: boolean
+  is_on_sale?: boolean | null
+  is_on_order?: boolean | null
+  is_retail?: boolean | null
+  price_type?: string | null
   product_categories?: {
     name_ru: string
     name_kk: string
@@ -230,6 +234,11 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           <div className="space-y-6">
             {/* Category & Brand */}
             <div className="flex items-center gap-2 flex-wrap">
+              {product.is_on_sale && (
+                <Badge className="bg-red-500 hover:bg-red-600 text-white font-semibold">
+                  Акция
+                </Badge>
+              )}
               {getCategoryName() && (
                 <Badge variant="secondary">{getCategoryName()}</Badge>
               )}

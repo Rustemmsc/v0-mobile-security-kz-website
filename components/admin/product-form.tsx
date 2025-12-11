@@ -139,6 +139,8 @@ export function ProductForm({ categories, product }: ProductFormProps) {
           return
         } else {
           toast.success("Товар успешно обновлен")
+          // Обновляем данные товара после успешного сохранения
+          router.refresh()
         }
       } else {
         // Create new product - сначала пробуем с новыми полями
@@ -163,8 +165,12 @@ export function ProductForm({ categories, product }: ProductFormProps) {
         }
       }
 
-      router.push("/admin/products")
+      // Обновляем данные перед переходом
       router.refresh()
+      // Небольшая задержка для обновления данных
+      setTimeout(() => {
+        router.push("/admin/products")
+      }, 100)
     } catch (error: any) {
       console.error("Error saving product:", error)
       toast.error(`Ошибка при сохранении товара: ${error?.message || "Неизвестная ошибка"}`)

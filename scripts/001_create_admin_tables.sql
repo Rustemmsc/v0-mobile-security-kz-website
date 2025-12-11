@@ -27,7 +27,7 @@ create policy "Super admins can insert admin users"
   on public.admins for insert
   with check (
     exists (
-      select 1 from public.admins
+      select 1 from publicа .admins
       where user_id = auth.uid() and role = 'super_admin'
     )
   );
