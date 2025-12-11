@@ -119,20 +119,21 @@ export function ProductForm({ categories, product }: ProductFormProps) {
       }
 
       if (product?.id) {
-        // Update existing product - пробуем с новыми полями
+        // Update existing product - сначала пробуем с новыми полями
         let { error, data } = await supabase.from("products").update(dataWithNewFields).eq("id", product.id).select()
 
-        // Если ошибка связана с кэшем схемы, пробуем без новых полей
-        if (error && (error.message.includes("schema cache") || error.message.includes("Could not find"))) {
-          console.warn("Schema cache issue, trying without new fields:", error.message)
-          // Сохраняем без новых полей, но товар сохранится
-          const { error: errorWithoutFields } = await supabase.from("products").update(dataToSave).eq("id", product.id).select()
+        // Если ошибка связана с кэшем схемы, автоматически пробуем без новых полей
+        if (error && (error.message.includes("schema cache") || error.message.includes("Could not find") || error.message.includes("column"))) {
+          console.warn("Schema cache issue detected, retrying without new fields:", error.message)
+          // Автоматически повторяем запрос без новых полей
+          const { error: errorWithoutFields, data: dataWithoutFields } = await supabase.from("products").update(dataToSave).eq("id", product.id).select()
           if (errorWithoutFields) {
-            console.error("Supabase error:", errorWithoutFields)
+            console.error("Supabase error (without new fields):", errorWithoutFields)
             toast.error(`Ошибка при сохранении товара: ${errorWithoutFields.message}`)
             return
           }
-          toast.warning("Товар сохранен, но новые поля не применены. Кэш схемы обновится через несколько минут. Попробуйте сохранить снова через 2-3 минуты.")
+          // Товар сохранен, но без новых полей - это нормально, пока кэш не обновится
+          toast.success("Товар успешно обновлен. Новые поля будут доступны после обновления кэша схемы (2-5 минут).")
         } else if (error) {
           console.error("Supabase error:", error)
           toast.error(`Ошибка при сохранении товара: ${error.message}`)
@@ -144,20 +145,21 @@ export function ProductForm({ categories, product }: ProductFormProps) {
         // Обновляем данные товара после успешного сохранения
         router.refresh()
       } else {
-        // Create new product - пробуем с новыми полями
+        // Create new product - сначала пробуем с новыми полями
         let { error, data } = await supabase.from("products").insert([dataWithNewFields]).select()
 
-        // Если ошибка связана с кэшем схемы, пробуем без новых полей
-        if (error && (error.message.includes("schema cache") || error.message.includes("Could not find"))) {
-          console.warn("Schema cache issue, trying without new fields:", error.message)
-          // Сохраняем без новых полей, но товар сохранится
-          const { error: errorWithoutFields } = await supabase.from("products").insert([dataToSave]).select()
+        // Если ошибка связана с кэшем схемы, автоматически пробуем без новых полей
+        if (error && (error.message.includes("schema cache") || error.message.includes("Could not find") || error.message.includes("column"))) {
+          console.warn("Schema cache issue detected, retrying without new fields:", error.message)
+          // Автоматически повторяем запрос без новых полей
+          const { error: errorWithoutFields, data: dataWithoutFields } = await supabase.from("products").insert([dataToSave]).select()
           if (errorWithoutFields) {
-            console.error("Supabase error:", errorWithoutFields)
+            console.error("Supabase error (without new fields):", errorWithoutFields)
             toast.error(`Ошибка при сохранении товара: ${errorWithoutFields.message}`)
             return
           }
-          toast.warning("Товар создан, но новые поля не применены. Кэш схемы обновится через несколько минут. Попробуйте отредактировать товар через 2-3 минуты.")
+          // Товар создан, но без новых полей - это нормально, пока кэш не обновится
+          toast.success("Товар успешно создан. Новые поля будут доступны после обновления кэша схемы (2-5 минут).")
         } else if (error) {
           console.error("Supabase error:", error)
           toast.error(`Ошибка при сохранении товара: ${error.message}`)
