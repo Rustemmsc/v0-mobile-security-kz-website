@@ -31,6 +31,7 @@ interface Product {
   description_en?: string
   price: number
   currency: string
+  price_type?: "retail" | "on_order" | "sale"
   sku?: string
   stock_quantity: number
   category_id?: string
@@ -39,6 +40,9 @@ interface Product {
   model?: string
   is_in_stock: boolean
   is_active: boolean
+  is_retail?: boolean
+  is_on_order?: boolean
+  is_on_sale?: boolean
 }
 
 interface ProductFormProps {
@@ -58,6 +62,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
     description_en: product?.description_en || "",
     price: product?.price || 0,
     currency: product?.currency || "KZT",
+    price_type: product?.price_type || "retail",
     sku: product?.sku || "",
     stock_quantity: product?.stock_quantity || 0,
     category_id: product?.category_id || "",
@@ -66,6 +71,9 @@ export function ProductForm({ categories, product }: ProductFormProps) {
     model: product?.model || "",
     is_in_stock: product?.is_in_stock ?? true,
     is_active: product?.is_active ?? true,
+    is_retail: product?.is_retail ?? true,
+    is_on_order: product?.is_on_order ?? false,
+    is_on_sale: product?.is_on_sale ?? false,
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -215,6 +223,23 @@ export function ProductForm({ categories, product }: ProductFormProps) {
           </div>
 
           <div className="grid gap-2">
+            <Label htmlFor="price_type">Тип цены *</Label>
+            <Select
+              value={formData.price_type}
+              onValueChange={(value: "retail" | "on_order" | "sale") => setFormData({ ...formData, price_type: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Выберите тип цены" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="retail">Розница</SelectItem>
+                <SelectItem value="on_order">Под Заказ</SelectItem>
+                <SelectItem value="sale">Акция</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-2">
             <Label htmlFor="sku">Артикул (SKU)</Label>
             <Input
               id="sku"
@@ -272,6 +297,48 @@ export function ProductForm({ categories, product }: ProductFormProps) {
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
             >
               Товар активен (отображается на сайте)
+            </Label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="is_retail"
+              checked={formData.is_retail}
+              onCheckedChange={(checked) => setFormData({ ...formData, is_retail: checked as boolean })}
+            />
+            <Label
+              htmlFor="is_retail"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Товар в розницу
+            </Label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="is_on_order"
+              checked={formData.is_on_order}
+              onCheckedChange={(checked) => setFormData({ ...formData, is_on_order: checked as boolean })}
+            />
+            <Label
+              htmlFor="is_on_order"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Товар под заказ
+            </Label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="is_on_sale"
+              checked={formData.is_on_sale}
+              onCheckedChange={(checked) => setFormData({ ...formData, is_on_sale: checked as boolean })}
+            />
+            <Label
+              htmlFor="is_on_sale"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Товар по акции
             </Label>
           </div>
 
