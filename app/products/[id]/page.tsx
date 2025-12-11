@@ -28,7 +28,8 @@ interface Product {
   }
 }
 
-export default async function ProductPage({ params }: { params: { id: string } }) {
+export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const cookieStore = await cookies()
   
   const supabase = createServerClient(
@@ -57,7 +58,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
   const { data: product, error } = await supabase
     .from('products')
     .select('*, product_categories(*)')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('is_active', true)
     .single()
 
@@ -68,7 +69,8 @@ export default async function ProductPage({ params }: { params: { id: string } }
   return <ProductDetailClient product={product as Product} />
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const cookieStore = await cookies()
   
   const supabase = createServerClient(
@@ -87,7 +89,7 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
   const { data: product } = await supabase
     .from('products')
     .select('name_ru, description_ru, images')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (!product) {
