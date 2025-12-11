@@ -119,32 +119,26 @@ export function ProductForm({ categories, product }: ProductFormProps) {
       }
 
       if (product?.id) {
-        // Update existing product - используем API route с service role для обхода кэша схемы
-        try {
-          const response = await fetch("/api/admin/products/update", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              productId: product.id,
-              productData: dataWithNewFields,
-            }),
-          })
+        // Update existing product - используем обычный клиент
+        // Пробуем сохранить с новыми полями
+        let { error, data } = await supabase.from("products").update(dataWithNewFields).eq("id", product.id).select()
 
-          const result = await response.json()
-
-          if (!response.ok) {
-            throw new Error(result.error || "Ошибка при сохранении товара")
+        // Если ошибка - пробуем без новых полей (на случай, если кэш еще не обновился)
+        if (error) {
+          console.warn("Error with new fields, trying without them:", error.message)
+          // Сохраняем без новых полей, чтобы товар хотя бы сохранился
+          const { error: errorWithoutFields } = await supabase.from("products").update(dataToSave).eq("id", product.id).select()
+          if (errorWithoutFields) {
+            console.error("Supabase error:", errorWithoutFields)
+            toast.error(`Ошибка при сохранении товара: ${errorWithoutFields.message}`)
+            return
           }
-
+          toast.success("Товар сохранен. Новые поля будут доступны после обновления кэша (попробуйте через 2-3 минуты).")
+        } else {
           toast.success("Товар успешно обновлен")
-          router.refresh()
-        } catch (error: any) {
-          console.error("Error updating product:", error)
-          toast.error(`Ошибка при сохранении товара: ${error.message}`)
-          return
         }
+        
+        router.refresh()
       } else {
         // Create new product - сначала пробуем с новыми полями
         let { error, data } = await supabase.from("products").insert([dataWithNewFields]).select()
