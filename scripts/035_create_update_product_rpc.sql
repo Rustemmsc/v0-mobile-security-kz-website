@@ -27,6 +27,7 @@ CREATE OR REPLACE FUNCTION update_product_with_new_fields(
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   result jsonb;
