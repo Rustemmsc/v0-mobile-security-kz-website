@@ -120,6 +120,8 @@ export function ProductForm({ categories, product }: ProductFormProps) {
 
       if (product?.id) {
         // Update existing product - используем RPC функцию для обхода кэша схемы
+        console.log("Attempting to save product with RPC function, is_on_sale:", formData.is_on_sale)
+        
         const { data: rpcData, error: rpcError } = await supabase.rpc('update_product_with_new_fields', {
           p_id: product.id,
           p_name_ru: dataWithNewFields.name_ru,
@@ -145,37 +147,24 @@ export function ProductForm({ categories, product }: ProductFormProps) {
         })
 
         if (rpcError) {
-          console.error("RPC error:", rpcError)
-          // Если RPC функция не существует, используем прямой SQL запрос
-          // Обновляем только новые поля через отдельный запрос
-          const newFieldsUpdate: any = {}
-          if (dataWithNewFields.price_type !== undefined) newFieldsUpdate.price_type = dataWithNewFields.price_type
-          if (dataWithNewFields.is_retail !== undefined) newFieldsUpdate.is_retail = dataWithNewFields.is_retail
-          if (dataWithNewFields.is_on_order !== undefined) newFieldsUpdate.is_on_order = dataWithNewFields.is_on_order
-          if (dataWithNewFields.is_on_sale !== undefined) newFieldsUpdate.is_on_sale = dataWithNewFields.is_on_sale
-          
-          // Сначала сохраняем основные данные
-          const { error: mainError } = await supabase.from("products").update(dataToSave).eq("id", product.id)
-          if (mainError) {
-            console.error("Supabase error:", mainError)
-            toast.error(`Ошибка при сохранении товара: ${mainError.message}`)
-            return
-          }
-          
-          // Потом пробуем обновить новые поля отдельно
-          if (Object.keys(newFieldsUpdate).length > 0) {
-            const { error: newFieldsError } = await supabase.from("products").update(newFieldsUpdate).eq("id", product.id)
-            if (newFieldsError) {
-              console.warn("New fields update error (may be schema cache):", newFieldsError.message)
-              // Товар сохранен, но новые поля могут не сохраниться из-за кэша
-              toast.success("Товар сохранен. Если галочки не сохранились, подождите 2-3 минуты и попробуйте снова.")
-            } else {
-              toast.success("Товар успешно обновлен")
+          console.error("RPC error details:", rpcError)
+          // Если RPC функция не существует или не работает, пробуем обычный способ
+          const { error, data } = await supabase.from("products").update(dataWithNewFields).eq("id", product.id).select()
+          if (error) {
+            console.warn("Error with new fields, trying without them:", error.message)
+            // Сохраняем без новых полей
+            const { error: errorWithoutFields } = await supabase.from("products").update(dataToSave).eq("id", product.id).select()
+            if (errorWithoutFields) {
+              console.error("Supabase error:", errorWithoutFields)
+              toast.error(`Ошибка при сохранении товара: ${errorWithoutFields.message}`)
+              return
             }
+            toast.warning(`RPC функция не работает: ${rpcError.message}. Товар сохранен без новых полей. Проверьте функцию в Supabase.`)
           } else {
-            toast.success("Товар успешно обновлен")
+            toast.success("Товар успешно обновлен (через обычный update)")
           }
         } else {
+          console.log("RPC function succeeded, data:", rpcData)
           toast.success("Товар успешно обновлен")
         }
         
