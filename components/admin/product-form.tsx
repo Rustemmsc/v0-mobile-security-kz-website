@@ -119,21 +119,47 @@ export function ProductForm({ categories, product }: ProductFormProps) {
       }
 
       if (product?.id) {
-        // Update existing product - используем обычный клиент
-        // Пробуем сохранить с новыми полями
-        let { error, data } = await supabase.from("products").update(dataWithNewFields).eq("id", product.id).select()
+        // Update existing product - используем RPC функцию для обхода кэша схемы
+        const { data: rpcData, error: rpcError } = await supabase.rpc('update_product_with_new_fields', {
+          p_id: product.id,
+          p_name_ru: dataWithNewFields.name_ru,
+          p_name_kk: dataWithNewFields.name_kk,
+          p_name_en: dataWithNewFields.name_en,
+          p_description_ru: dataWithNewFields.description_ru || null,
+          p_description_kk: dataWithNewFields.description_kk || null,
+          p_description_en: dataWithNewFields.description_en || null,
+          p_price: dataWithNewFields.price,
+          p_currency: dataWithNewFields.currency,
+          p_sku: dataWithNewFields.sku || null,
+          p_stock_quantity: dataWithNewFields.stock_quantity,
+          p_category_id: dataWithNewFields.category_id || null,
+          p_images: dataWithNewFields.images || [],
+          p_brand: dataWithNewFields.brand || null,
+          p_model: dataWithNewFields.model || null,
+          p_is_in_stock: dataWithNewFields.is_in_stock,
+          p_is_active: dataWithNewFields.is_active,
+          p_price_type: dataWithNewFields.price_type || null,
+          p_is_retail: dataWithNewFields.is_retail !== undefined ? dataWithNewFields.is_retail : null,
+          p_is_on_order: dataWithNewFields.is_on_order !== undefined ? dataWithNewFields.is_on_order : null,
+          p_is_on_sale: dataWithNewFields.is_on_sale !== undefined ? dataWithNewFields.is_on_sale : null,
+        })
 
-        // Если ошибка - пробуем без новых полей (на случай, если кэш еще не обновился)
-        if (error) {
-          console.warn("Error with new fields, trying without them:", error.message)
-          // Сохраняем без новых полей, чтобы товар хотя бы сохранился
-          const { error: errorWithoutFields } = await supabase.from("products").update(dataToSave).eq("id", product.id).select()
-          if (errorWithoutFields) {
-            console.error("Supabase error:", errorWithoutFields)
-            toast.error(`Ошибка при сохранении товара: ${errorWithoutFields.message}`)
-            return
+        if (rpcError) {
+          console.error("RPC error:", rpcError)
+          // Если RPC функция не существует, пробуем обычный способ
+          const { error, data } = await supabase.from("products").update(dataWithNewFields).eq("id", product.id).select()
+          if (error) {
+            console.warn("Error with new fields, trying without them:", error.message)
+            const { error: errorWithoutFields } = await supabase.from("products").update(dataToSave).eq("id", product.id).select()
+            if (errorWithoutFields) {
+              console.error("Supabase error:", errorWithoutFields)
+              toast.error(`Ошибка при сохранении товара: ${errorWithoutFields.message}`)
+              return
+            }
+            toast.success("Товар сохранен. Выполните SQL скрипт 035_create_update_product_rpc.sql в Supabase для полной функциональности.")
+          } else {
+            toast.success("Товар успешно обновлен")
           }
-          toast.success("Товар сохранен. Новые поля будут доступны после обновления кэша (попробуйте через 2-3 минуты).")
         } else {
           toast.success("Товар успешно обновлен")
         }
