@@ -1,0 +1,22 @@
+{
+  "name": "MobileSecurity.kz - Системы безопасности",
+  "short_name": "MobileSecurity",
+  "description": "Установка систем безопасности в Астане: видеонаблюдение, СКУД, охранная сигнализация, умный дом",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.jpg",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.jpg",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#0ea5e9",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/"
+}
