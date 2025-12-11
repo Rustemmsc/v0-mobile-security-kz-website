@@ -2,14 +2,15 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Edit, Trash2, Eye, EyeOff } from "lucide-react"
+import { Edit, Trash2, Eye, EyeOff, ArrowUpDown } from "lucide-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface Product {
   id: string
@@ -31,6 +32,7 @@ interface ProductsTableProps {
 
 export function ProductsTable({ products }: ProductsTableProps) {
   const [isLoading, setIsLoading] = useState<string | null>(null)
+  const [sortBy, setSortBy] = useState<"price_asc" | "price_desc" | "none">("none")
   const router = useRouter()
 
   const handleDelete = async (productId: string) => {
@@ -71,6 +73,22 @@ export function ProductsTable({ products }: ProductsTableProps) {
     setIsLoading(null)
   }
 
+  // Сортировка товаров
+  const sortedProducts = useMemo(() => {
+    if (sortBy === "none") return products
+    
+    const sorted = [...products].sort((a, b) => {
+      if (sortBy === "price_asc") {
+        return a.price - b.price
+      } else if (sortBy === "price_desc") {
+        return b.price - a.price
+      }
+      return 0
+    })
+    
+    return sorted
+  }, [products, sortBy])
+
   if (products.length === 0) {
     return (
       <div className="text-center py-12">
@@ -83,8 +101,26 @@ export function ProductsTable({ products }: ProductsTableProps) {
   }
 
   return (
-    <Table>
-      <TableHeader>
+    <div className="space-y-4">
+      {/* Кнопка сортировки */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Select value={sortBy} onValueChange={(value: "price_asc" | "price_desc" | "none") => setSortBy(value)}>
+            <SelectTrigger className="w-[200px]">
+              <ArrowUpDown className="mr-2 h-4 w-4" />
+              <SelectValue placeholder="Сортировать по цене" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Без сортировки</SelectItem>
+              <SelectItem value="price_asc">По возрастанию цены</SelectItem>
+              <SelectItem value="price_desc">По убыванию цены</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <Table>
+        <TableHeader>
         <TableRow>
           <TableHead className="w-20">Фото</TableHead>
           <TableHead>Название</TableHead>
@@ -96,7 +132,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {products.map((product) => (
+        {sortedProducts.map((product) => (
           <TableRow key={product.id}>
             <TableCell>
               {product.images &&
@@ -175,5 +211,6 @@ export function ProductsTable({ products }: ProductsTableProps) {
         ))}
       </TableBody>
     </Table>
+    </div>
   )
 }
