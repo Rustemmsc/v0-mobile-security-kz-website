@@ -40,6 +40,7 @@ interface Product {
   is_in_stock: boolean
   sku: string | null
   is_active: boolean
+  position?: number | null
   product_categories?: {
     name_ru: string
     name_kk: string
@@ -175,6 +176,7 @@ export function Shop({ categories: dbCategories, products: dbProducts, showCusto
     popular: p.is_featured,
     inStock: p.is_in_stock,
     sku: p.sku || "",
+    position: p.position || 0,
     name_ru: p.name_ru,
     name_kk: p.name_kk,
     name_en: p.name_en,
@@ -183,7 +185,19 @@ export function Shop({ categories: dbCategories, products: dbProducts, showCusto
     description_en: p.description_en || "",
   }))
 
-  const filteredProducts = selectedCategory ? products.filter((p) => p.category === selectedCategory) : []
+  // Сортируем товары по position, затем по id
+  const sortedProducts = [...products].sort((a, b) => {
+    const posA = a.position || 0
+    const posB = b.position || 0
+    if (posA !== posB) {
+      return posA - posB
+    }
+    return a.id.localeCompare(b.id)
+  })
+
+  const filteredProducts = selectedCategory 
+    ? sortedProducts.filter((p) => p.category === selectedCategory) 
+    : []
 
   const brands = [
     { name: "Hikvision", logo: "/hikvision-logo-large.jpg" },

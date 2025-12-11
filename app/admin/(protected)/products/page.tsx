@@ -8,10 +8,17 @@ import { ProductsTable } from "@/components/admin/products-table"
 export default async function ProductsPage() {
   const supabase = await createClient()
 
-  const { data: products } = await supabase
-    .from("products")
-    .select("*, product_categories(name_ru)")
-    .order("created_at", { ascending: false })
+  const [{ data: products }, { data: categories }] = await Promise.all([
+    supabase
+      .from("products")
+      .select("*, product_categories(name_ru, id)")
+      .order("position", { ascending: true })
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("product_categories")
+      .select("*")
+      .order("display_order"),
+  ])
 
   return (
     <div className="space-y-6">
@@ -33,7 +40,7 @@ export default async function ProductsPage() {
           <CardTitle>Все товары</CardTitle>
         </CardHeader>
         <CardContent>
-          <ProductsTable products={products || []} />
+          <ProductsTable products={products || []} categories={categories || []} />
         </CardContent>
       </Card>
     </div>
