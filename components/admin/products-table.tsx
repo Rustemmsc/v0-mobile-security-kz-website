@@ -6,7 +6,7 @@ import { Edit, Trash2, Eye, EyeOff, ArrowUpDown } from "lucide-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
@@ -33,8 +33,26 @@ interface ProductsTableProps {
 
 export function ProductsTable({ products }: ProductsTableProps) {
   const [isLoading, setIsLoading] = useState<string | null>(null)
-  const [sortBy, setSortBy] = useState<"price_asc" | "price_desc" | "date_asc" | "date_desc" | "none">("none")
+  
+  // Загружаем сохраненную сортировку из localStorage при инициализации
+  const [sortBy, setSortBy] = useState<"price_asc" | "price_desc" | "date_asc" | "date_desc" | "none">(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("products_sort_by")
+      if (saved && ["price_asc", "price_desc", "date_asc", "date_desc", "none"].includes(saved)) {
+        return saved as "price_asc" | "price_desc" | "date_asc" | "date_desc" | "none"
+      }
+    }
+    return "none"
+  })
+  
   const router = useRouter()
+
+  // Сохраняем сортировку в localStorage при изменении
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("products_sort_by", sortBy)
+    }
+  }, [sortBy])
 
   const handleDelete = async (productId: string) => {
     if (!confirm("Вы уверены, что хотите удалить этот товар?")) {
