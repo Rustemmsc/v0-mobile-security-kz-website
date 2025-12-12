@@ -21,6 +21,7 @@ interface Product {
   is_in_stock: boolean
   is_active: boolean
   images: string[]
+  created_at?: string
   product_categories?: {
     name_ru: string
   }
@@ -32,7 +33,7 @@ interface ProductsTableProps {
 
 export function ProductsTable({ products }: ProductsTableProps) {
   const [isLoading, setIsLoading] = useState<string | null>(null)
-  const [sortBy, setSortBy] = useState<"price_asc" | "price_desc" | "none">("none")
+  const [sortBy, setSortBy] = useState<"price_asc" | "price_desc" | "date_asc" | "date_desc" | "none">("none")
   const router = useRouter()
 
   const handleDelete = async (productId: string) => {
@@ -82,6 +83,14 @@ export function ProductsTable({ products }: ProductsTableProps) {
         return a.price - b.price
       } else if (sortBy === "price_desc") {
         return b.price - a.price
+      } else if (sortBy === "date_asc") {
+        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0
+        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
+        return dateA - dateB
+      } else if (sortBy === "date_desc") {
+        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0
+        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
+        return dateB - dateA
       }
       return 0
     })
@@ -105,15 +114,17 @@ export function ProductsTable({ products }: ProductsTableProps) {
       {/* Кнопка сортировки */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Select value={sortBy} onValueChange={(value: "price_asc" | "price_desc" | "none") => setSortBy(value)}>
+          <Select value={sortBy} onValueChange={(value: "price_asc" | "price_desc" | "date_asc" | "date_desc" | "none") => setSortBy(value)}>
             <SelectTrigger className="w-[200px]">
               <ArrowUpDown className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Сортировать по цене" />
+              <SelectValue placeholder="Сортировать" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Без сортировки</SelectItem>
               <SelectItem value="price_asc">По возрастанию цены</SelectItem>
               <SelectItem value="price_desc">По убыванию цены</SelectItem>
+              <SelectItem value="date_asc">По дате добавления (старые)</SelectItem>
+              <SelectItem value="date_desc">По дате добавления (новые)</SelectItem>
             </SelectContent>
           </Select>
         </div>
