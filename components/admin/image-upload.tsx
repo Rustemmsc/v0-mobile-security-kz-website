@@ -50,15 +50,22 @@ export function ImageUpload({ images, onChange }: ImageUploadProps) {
       })
 
       if (!response.ok) {
-        throw new Error("Ошибка загрузки")
+        const errorData = await response.json().catch(() => ({ error: "Ошибка загрузки" }))
+        throw new Error(errorData.error || "Ошибка загрузки")
       }
 
-      const { url } = await response.json()
-      onChange([...images, url])
+      const data = await response.json()
+      
+      if (!data.url) {
+        throw new Error("Сервер не вернул URL изображения")
+      }
+
+      onChange([...images, data.url])
       toast.success("Изображение загружено")
-    } catch (error) {
+    } catch (error: any) {
       console.error("Upload error:", error)
-      toast.error("Не удалось загрузить изображение")
+      const errorMessage = error?.message || "Не удалось загрузить изображение"
+      toast.error(errorMessage)
     } finally {
       setIsUploading(false)
     }
