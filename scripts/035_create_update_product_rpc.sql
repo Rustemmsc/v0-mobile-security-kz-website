@@ -22,7 +22,8 @@ CREATE OR REPLACE FUNCTION update_product_with_new_fields(
   p_price_type text DEFAULT NULL,
   p_is_retail boolean DEFAULT NULL,
   p_is_on_order boolean DEFAULT NULL,
-  p_is_on_sale boolean DEFAULT NULL
+  p_is_on_sale boolean DEFAULT NULL,
+  p_original_price decimal DEFAULT NULL
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -55,6 +56,7 @@ BEGIN
     is_retail = COALESCE(p_is_retail, is_retail),
     is_on_order = COALESCE(p_is_on_order, is_on_order),
     is_on_sale = COALESCE(p_is_on_sale, is_on_sale),
+    original_price = p_original_price,
     updated_at = now()
   WHERE id = p_id;
   

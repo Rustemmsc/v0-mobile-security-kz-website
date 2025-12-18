@@ -31,6 +31,7 @@ interface Product {
   is_on_order?: boolean | null
   is_retail?: boolean | null
   price_type?: string | null
+  original_price?: number | null
   product_categories?: {
     name_ru: string
     name_kk: string
@@ -270,11 +271,25 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
             {/* Price */}
             <Card className="p-6 bg-accent/10">
-              <div className="flex items-baseline gap-2 mb-4">
-                <span className="text-4xl font-bold text-primary">
-                  {product.price.toLocaleString()}
-                </span>
-                <span className="text-xl text-muted-foreground">{t("shop.currency")}</span>
+              <div className="flex items-baseline gap-2 mb-4 flex-wrap">
+                {product.is_on_sale && product.original_price && product.original_price > product.price ? (
+                  <>
+                    <span className="text-2xl text-muted-foreground line-through">
+                      {product.original_price.toLocaleString()}
+                    </span>
+                    <span className="text-4xl font-bold text-red-600">
+                      {product.price.toLocaleString()}
+                    </span>
+                    <span className="text-xl text-muted-foreground">{t("shop.currency")}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-4xl font-bold text-primary">
+                      {product.price.toLocaleString()}
+                    </span>
+                    <span className="text-xl text-muted-foreground">{t("shop.currency")}</span>
+                  </>
+                )}
               </div>
 
               {/* Action Buttons */}

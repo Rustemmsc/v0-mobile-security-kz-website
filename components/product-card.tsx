@@ -27,6 +27,7 @@ interface ProductCardProps {
     isOnOrder?: boolean
     isRetail?: boolean
     priceType?: string
+    originalPrice?: number
   }
 }
 
@@ -131,9 +132,21 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Price */}
         {product.price > 0 && (
-          <div className="flex items-baseline gap-2 mb-4">
-            <span className="text-3xl font-bold text-primary">{product.price.toLocaleString()}</span>
-            <span className="text-muted-foreground">{t("shop.currency")}</span>
+          <div className="flex items-baseline gap-2 mb-4 flex-wrap">
+            {product.isOnSale && product.originalPrice && product.originalPrice > product.price ? (
+              <>
+                <span className="text-xl text-muted-foreground line-through">
+                  {product.originalPrice.toLocaleString()}
+                </span>
+                <span className="text-3xl font-bold text-red-600">{product.price.toLocaleString()}</span>
+                <span className="text-muted-foreground">{t("shop.currency")}</span>
+              </>
+            ) : (
+              <>
+                <span className="text-3xl font-bold text-primary">{product.price.toLocaleString()}</span>
+                <span className="text-muted-foreground">{t("shop.currency")}</span>
+              </>
+            )}
           </div>
         )}
 

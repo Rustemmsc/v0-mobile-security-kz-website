@@ -45,6 +45,7 @@ interface Product {
   is_on_order?: boolean | null
   is_retail?: boolean | null
   price_type?: string | null
+  original_price?: number | null
   product_categories?: {
     name_ru: string
     name_kk: string
@@ -185,6 +186,7 @@ export function Shop({ categories: dbCategories, products: dbProducts, showCusto
     isOnOrder: p.is_on_order || false,
     isRetail: p.is_retail ?? true,
     priceType: p.price_type || "retail",
+    originalPrice: p.original_price || undefined,
     name_ru: p.name_ru,
     name_kk: p.name_kk,
     name_en: p.name_en,

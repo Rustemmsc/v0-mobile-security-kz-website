@@ -32,6 +32,7 @@ interface Product {
   price: number
   currency: string
   price_type?: "retail" | "on_order" | "sale"
+  original_price?: number | null
   sku?: string
   stock_quantity: number
   category_id?: string
@@ -63,6 +64,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
     price: product?.price || 0,
     currency: product?.currency || "KZT",
     price_type: product?.price_type || "retail",
+    original_price: product?.original_price || null,
     sku: product?.sku || "",
     stock_quantity: product?.stock_quantity || 0,
     category_id: product?.category_id || "",
@@ -117,6 +119,11 @@ export function ProductForm({ categories, product }: ProductFormProps) {
       if (formData.is_on_sale !== undefined) {
         dataWithNewFields.is_on_sale = Boolean(formData.is_on_sale)
       }
+      if (formData.original_price !== undefined && formData.original_price !== null) {
+        dataWithNewFields.original_price = Number(formData.original_price)
+      } else {
+        dataWithNewFields.original_price = null
+      }
 
       if (product?.id) {
         // Update existing product - используем RPC функцию для обхода кэша схемы
@@ -144,6 +151,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
           p_is_retail: dataWithNewFields.is_retail !== undefined ? dataWithNewFields.is_retail : null,
           p_is_on_order: dataWithNewFields.is_on_order !== undefined ? dataWithNewFields.is_on_order : null,
           p_is_on_sale: dataWithNewFields.is_on_sale !== undefined ? dataWithNewFields.is_on_sale : null,
+          p_original_price: dataWithNewFields.original_price !== undefined ? dataWithNewFields.original_price : null,
         })
 
         if (rpcError) {
@@ -316,6 +324,20 @@ export function ProductForm({ categories, product }: ProductFormProps) {
               onChange={(e) => setFormData({ ...formData, price: Number.parseFloat(e.target.value) })}
             />
             <p className="text-sm text-slate-500">Цена товара в тенге</p>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="original_price">Оригинальная цена до скидки (₸)</Label>
+            <Input
+              id="original_price"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="Оставьте пустым, если нет скидки"
+              value={formData.original_price || ""}
+              onChange={(e) => setFormData({ ...formData, original_price: e.target.value ? Number.parseFloat(e.target.value) : null })}
+            />
+            <p className="text-sm text-slate-500">Используется для отображения зачеркнутой старой цены на товарах со скидкой</p>
           </div>
 
           <div className="grid gap-2">
