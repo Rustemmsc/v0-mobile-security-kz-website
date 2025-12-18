@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import {
   Dialog,
@@ -43,6 +43,8 @@ export function CategoryDialog({ category, children }: CategoryDialogProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isSavingImage, setIsSavingImage] = useState(false)
+  const previousImageRef = useRef<string>(category?.image || "")
   const [formData, setFormData] = useState<Category>({
     name_ru: category?.name_ru || "",
     name_kk: category?.name_kk || "",
@@ -52,6 +54,51 @@ export function CategoryDialog({ category, children }: CategoryDialogProps) {
     description_en: category?.description_en || "",
     image: category?.image || "",
   })
+
+  // Автоматическое сохранение изображения при изменении
+  useEffect(() => {
+    // Сохраняем изображение только если:
+    // 1. Категория уже существует (есть category?.id)
+    // 2. Изображение изменилось
+    // 3. Диалог открыт
+    // 4. Изображение не пустое
+    if (
+      category?.id &&
+      open &&
+      formData.image !== previousImageRef.current &&
+      formData.image
+    ) {
+      const saveImage = async () => {
+        setIsSavingImage(true)
+        const supabase = createClient()
+
+        try {
+          const { error } = await supabase
+            .from("product_categories")
+            .update({ image: formData.image })
+            .eq("id", category.id)
+
+          if (error) throw error
+
+          previousImageRef.current = formData.image
+          toast.success("Изображение автоматически сохранено")
+          router.refresh()
+        } catch (error) {
+          console.error("Error auto-saving image:", error)
+          toast.error("Не удалось сохранить изображение")
+        } finally {
+          setIsSavingImage(false)
+        }
+      }
+
+      // Небольшая задержка, чтобы избежать множественных сохранений при быстрых изменениях
+      const timeoutId = setTimeout(saveImage, 1000)
+
+      return () => clearTimeout(timeoutId)
+    } else {
+      previousImageRef.current = formData.image
+    }
+  }, [formData.image, category?.id, open, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -167,7 +214,15 @@ export function CategoryDialog({ category, children }: CategoryDialogProps) {
 
           {/* Image Upload */}
           <div className="grid gap-2">
-            <Label>Изображение категории</Label>
+            <div className="flex items-center justify-between">
+              <Label>Изображение категории</Label>
+              {isSavingImage && (
+                <span className="text-xs text-slate-500 flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Сохранение...
+                </span>
+              )}
+            </div>
             <ImageUpload 
               images={formData.image ? [formData.image] : []} 
               onChange={(images) => setFormData({ ...formData, image: images[0] || "" })} 
